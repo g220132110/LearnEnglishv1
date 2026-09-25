@@ -31,6 +31,7 @@
   <!-- 共用單字卡 -->
   <div class="ws-back" id="wsBack" hidden></div>
   <div class="word-sheet" id="wordSheet" role="dialog" aria-label="單字解說" hidden>
+    <button class="linkbtn" id="wsPrev" hidden style="align-self:flex-start"></button>
     <div class="ws-head">
       <div>
         <div class="ws-word" id="wsWord"></div>
@@ -56,6 +57,15 @@
       <div class="formula" id="wsFormula"></div>
       <div class="ws-story" id="wsStory"></div>
     </div>
+    <div id="wsFamily" hidden>
+      <div class="label">字根家族 · 一次記一串</div>
+      <p class="fam-tip">同一個字根的字意思相近，點任何一個字可以繼續往下學。</p>
+      <div id="wsFamilyBody"></div>
+    </div>
+    <div id="wsPhrases" hidden>
+      <div class="label">常用片語</div>
+      <ul class="phrase-list" id="wsPhraseList"></ul>
+    </div>
     <div class="ws-foot">
       <button class="btn btn-ghost" id="wsSave" aria-pressed="false">＋ 加入生字本</button>
       <a class="linkbtn" id="wsMore" href="#" target="_blank" rel="noopener">劍橋英漢字典 ↗</a>
@@ -74,6 +84,7 @@
 <!-- 2. 內容包（新增一期新聞：複製一個 data/news/*.js 並在這裡加一行） -->
 <script src="data/speaking/travel.js"></script>
 <script src="data/news/2026-09-25.js"></script>
+<script src="data/roots.js"></script>  <!-- 字根家族與片語：放在內容包最後，只補字典沒有的字 -->
 
 <!-- 3. 功能模組（新增功能：在 js/modules/ 加檔案並在這裡加一行） -->
 <script src="js/modules/speaking.js"></script>

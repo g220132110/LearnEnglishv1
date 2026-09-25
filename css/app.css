@@ -211,3 +211,34 @@ button.w{border:none;font-family:var(--display)}
 .wb-from{font-size:.75rem;color:var(--ink-soft)}
 .wb-del{background:none;border:1px solid var(--line);border-radius:8px;width:32px;height:32px;color:var(--ink-soft)}
 .plan{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:6px}
+
+/* ================= 單字卡：字根家族、片語 ================= */
+.fam-tip{margin:4px 0 8px;font-size:.82rem;color:var(--ink-soft)}
+#wsFamilyBody{display:flex;flex-direction:column;gap:12px}
+.fam{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--paper)}
+.fam-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 8px;margin-bottom:8px}
+.fam-head b{font-family:var(--display);font-size:1.15rem;color:var(--accent-ink);background:var(--accent);padding:0 8px;border-radius:6px}
+.fam-head small{color:var(--ink-soft);font-size:.78rem}
+.fam-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px}
+.fam-word{display:grid;grid-template-columns:1fr;gap:1px;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:7px 10px}
+.fam-word b{font-family:var(--display);font-size:1rem}
+.fam-word em{font-style:normal;font-size:.85rem}
+.fam-word span{font-size:.72rem;color:var(--ink-soft);line-height:1.4}
+.fam-word.self{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.fam-word:hover{border-color:var(--ink-soft)}
+.fam-note{margin:8px 0 0;font-size:.82rem;color:var(--sky)}
+.phrase-list{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-direction:column;gap:8px}
+.phrase-list li{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:center}
+.phrase-list b{font-family:var(--display);font-weight:500;display:block}
+.phrase-list span{font-size:.85rem;color:var(--ink-soft)}
+
+/* ================= 閱讀：語速、逐句標示 ================= */
+.speed{display:inline-flex;align-items:center;gap:2px;border:1.5px solid var(--line);border-radius:12px;padding:3px;background:var(--card)}
+.speed-label{font-size:.78rem;color:var(--ink-soft);padding:0 6px}
+.speed-opt{background:none;border:none;border-radius:9px;padding:5px 10px;font-size:.88rem;display:flex;flex-direction:column;align-items:center;line-height:1.2}
+.speed-opt small{font-family:var(--mono);font-size:.62rem;color:var(--ink-soft)}
+.speed-opt[aria-pressed="true"]{background:var(--ink);color:var(--paper);font-weight:700}
+.speed-opt[aria-pressed="true"] small{color:color-mix(in srgb,var(--paper) 70%,transparent)}
+.sent{border-radius:4px;transition:background .15s}
+.sent.now{background:color-mix(in srgb,var(--accent) 38%,transparent)}
+@media (prefers-reduced-motion:reduce){.sent{transition:none}}

@@ -124,6 +124,24 @@ App.dict.add({
 - 查字時會自動還原原形：climbed→climb、tariffs→tariff、estimated→estimate。
 - 後載入的內容包可以覆蓋先前的條目，所以新聞包可以用「新聞語境」重新解釋同一個字。
 
+### 6.1b 字根家族與片語 `data/roots.js`
+
+目標是少死背：先學字根，再把同字根的字串成一家；看到新字時能拆開來猜意思。
+
+```js
+App.dict.addRoots({
+  erg: { form: "erg / urg", zh: "工作、作用", origin: "希臘文 ergon",
+         note: "（選填）容易混淆的提醒",
+         words: [["energy", "ˈenərdʒi", "n.", "能量", "en 在裡面 ＋ erg 作用 → 內在的作用力"], ...] },
+});
+App.dict.link({ extension: ["tend"] });                    // 字典已有、不在 words 裡的字
+App.dict.addPhrases({ allergic: [["be allergic to", "對…過敏"]] });
+```
+- 單字卡會自動顯示「字根家族」和「常用片語」。點家族裡的字會打開那個字的單字卡，上方有「← 回到上一個字」，可以一路往下學。
+- 家族成員如果字典裡沒有，會自動補上完整條目（音標、意思、拆解）。
+- 條目沒有寫拆解時，會從字根家族借用。
+- 目前收錄 39 組字根、字首、字尾，家族單字共 164 筆（有些字同時屬於兩個家族），以及 42 個常用字的片語。
+
 ### 6.2 口說內容包 `data/speaking/*.js`
 
 ```js

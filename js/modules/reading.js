@@ -121,12 +121,16 @@
         <div class="r-tools">
           <button class="btn btn-dark" id="rdPlay">${ICON.play}朗讀全文</button>
           <button class="btn btn-ghost" id="rdZh" aria-pressed="${showZh}">${showZh ? "隱藏中文" : "顯示中文"}</button>
+          <div class="speed" role="group" aria-label="朗讀語速">
+            <span class="speed-label">語速</span>
+            ${RATES.map((r) => `<button class="speed-opt" data-rate="${r.id}" aria-pressed="${r.id === rate}">${r.zh}<small>${r.id}×</small></button>`).join("")}
+          </div>
         </div>
         <p class="tip" style="margin:0">點任何單字看 KK／IPA 音標與解說；<span class="key-sample">黃色底線</span>是本篇重點單字。</p>
         <div class="r-body">
           ${a.paragraphs.map((p, i) => `
             <div class="para" data-i="${i}">
-              <p class="p-en">${tok(p.en)}</p>
+              <p class="p-en">${sentences(p.en).map((t, k) => `<span class="sent" data-s="${i}-${k}">${tok(t)}</span>`).join(" ")}</p>
               <div class="p-tools"><button class="mini" data-say="${i}" aria-label="朗讀這段">${ICON.play}</button><button class="mini" data-zh="${i}" aria-label="這段的中文">中</button></div>
               <p class="p-zh" ${showZh ? "" : "hidden"}>${esc(p.zh)}</p>
             </div>`).join("")}
@@ -154,30 +158,50 @@
     };
     el.querySelector(".r-body").onclick = (e) => {
       const z = e.target.closest("[data-zh]"); if (z) { const p = el.querySelector(`.para[data-i="${z.dataset.zh}"] .p-zh`); p.hidden = !p.hidden; return; }
-      const s = e.target.closest("[data-say]"); if (s) { stopReader(); highlight(+s.dataset.say); App.speech.speak(a.paragraphs[+s.dataset.say].en, 0.9, () => highlight(-1)); }
+      const s = e.target.closest("[data-say]"); if (s) { const i = +s.dataset.say; play(a, i, i, false); }
     };
-    // 朗讀全文：一段接一段，正在唸的段落會標示出來
-    $("#rdPlay").onclick = () => {
-      if (reader) { stopReader(); return; }
-      const run = { i: 0 }; reader = run;
-      $("#rdPlay").innerHTML = ICON.stop + "停止朗讀";
-      const next = () => {
-        if (reader !== run) return;
-        if (run.i >= a.paragraphs.length) { stopReader(); return; }
-        highlight(run.i);
-        el.querySelector(`.para[data-i="${run.i}"]`).scrollIntoView({ behavior: "smooth", block: "center" });
-        App.speech.speak(a.paragraphs[run.i].en, 0.9, () => { run.i++; next(); });
-      };
-      next();
+    // 語速：很慢／慢會一句一句唸，句與句之間停頓，讓耳朵跟得上
+    el.querySelector(".speed").onclick = (e) => {
+      const b = e.target.closest("[data-rate]"); if (!b) return;
+      rate = b.dataset.rate; App.store.set("reading.rate", rate);
+      App.$$(".speed-opt").forEach((x) => x.setAttribute("aria-pressed", x.dataset.rate === rate));
     };
+    $("#rdPlay").onclick = () => { if (reader && reader.full) { stopReader(); return; } play(a, 0, a.paragraphs.length - 1, true); };
     $("#rdDone").onclick = () => {
       readMap[a.id] = Date.now(); App.store.set("reading.read", readMap);
       App.go("reading");
     };
   }
-  function highlight(i) { App.$$(".para").forEach((p) => p.classList.toggle("speaking", +p.dataset.i === i)); }
+  /* ---------- 朗讀：以「句」為單位播放，正在唸的句子與段落會標示 ---------- */
+  const RATES = [{ id: "0.6", zh: "很慢", gap: 1200 }, { id: "0.75", zh: "慢", gap: 700 }, { id: "0.9", zh: "標準", gap: 250 }];
+  let rate = App.store.get("reading.rate", "0.9");
+  // 句子切分：句號後接空白才切；避開 U.S.、F. Dennis 這類縮寫
+  function sentences(text) { return text.split(/(?<=[a-z0-9%)]{2}[.!?]["”]?)\s+/); }
+
+  function play(a, fromP, toP, full) {
+    stopReader();
+    const queue = [];
+    for (let i = fromP; i <= toP; i++) sentences(a.paragraphs[i].en).forEach((t, k) => queue.push({ i, k, t }));
+    const run = { n: 0, full, timer: null }; reader = run;
+    if (full) $("#rdPlay").innerHTML = ICON.stop + "停止朗讀";
+    const r = RATES.find((x) => x.id === rate) || RATES[2];
+    const next = () => {
+      if (reader !== run) return;
+      if (run.n >= queue.length) { stopReader(); return; }
+      const q = queue[run.n];
+      highlight(q.i, q.i + "-" + q.k);
+      if (full && q.k === 0) document.querySelector(`.para[data-i="${q.i}"]`).scrollIntoView({ behavior: "smooth", block: "center" });
+      App.speech.speak(q.t, +r.id, () => { if (reader !== run) return; run.n++; run.timer = setTimeout(next, r.gap); });
+    };
+    next();
+  }
+  function highlight(i, sid) {
+    App.$$(".para").forEach((p) => p.classList.toggle("speaking", +p.dataset.i === i));
+    App.$$(".sent").forEach((s) => s.classList.toggle("now", s.dataset.s === sid));
+  }
   function stopReader() {
-    reader = null; App.speech.stop(); highlight(-1);
+    if (reader && reader.timer) clearTimeout(reader.timer);
+    reader = null; App.speech.stop(); highlight(-1, "");
     const b = $("#rdPlay"); if (b) b.innerHTML = ICON.play + "朗讀全文";
   }
 

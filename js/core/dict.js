@@ -47,8 +47,17 @@
     remove(w) { saved = saved.filter((x) => x.w !== w); App.store.set("words", saved); },
   };
 
+  /* ---------- 字根家族與片語 ----------
+   * ROOTS：{ 字根id: { form, zh, origin, note, words: [[單字, IPA, 詞性, 意思, 拆解], ...] } }
+   * LINKS：{ 單字: [字根id, ...] }（家族成員會自動連結，不用重複寫）
+   * PHRASES：{ 單字: [[英文片語, 中文], ...] }
+   */
+  const ROOTS = {}, LINKS = {}, PHRASES = {};
+  const linkWord = (w, id) => { (LINKS[w] = LINKS[w] || []); if (!LINKS[w].includes(id)) LINKS[w].push(id); };
+
   /* ---------- 單字卡 ---------- */
-  let openKey = null, openFrom = "";
+  let openKey = null, openFrom = "", openShown = "";
+  const history = [];
   function renderSaveBtn() {
     const b = $("#wsSave"); if (!b) return;
     const on = App.words.has(openKey);
@@ -56,10 +65,19 @@
     b.setAttribute("aria-pressed", on);
   }
   function open(raw, opts = {}) {
+    const sheet = $("#wordSheet");
+    if (!sheet.hidden && openShown && !opts.back && keyOf(raw) !== keyOf(openShown)) history.push({ raw: openShown, from: openFrom });
     const { key, entry, base } = lookup(raw);
     const shown = raw.replace(/[“”"()]/g, "").replace(/[.,!?;:]+$/, "");
-    const [ipa, pos, zh, parts] = entry ? entry.split("|") : ["", "", "", ""];
-    openKey = base || key; openFrom = opts.from || "";
+    let [ipa, pos, zh, parts] = entry ? entry.split("|") : ["", "", "", ""];
+    // 條目沒有拆解時，從字根家族借用
+    if (entry && !(parts && parts.trim())) {
+      const w = base || key;
+      for (const id of LINKS[w] || []) { const hit = (ROOTS[id] || { words: [] }).words.find((x) => x[0] === w); if (hit && hit[4]) { parts = hit[4]; break; } }
+    }
+    openKey = base || key; openFrom = opts.from || openFrom || ""; openShown = shown;
+    $("#wsPrev").hidden = !history.length;
+    if (history.length) $("#wsPrev").textContent = "← 回到 " + history[history.length - 1].raw.replace(/[.,!?;:“”"()]+/g, "");
     $("#wsWord").textContent = shown;
     $("#wsBase").hidden = !(base && base !== keyOf(shown));
     $("#wsBase").textContent = base ? "原形：" + base : "";
@@ -77,6 +95,9 @@
       }).join(`<span class="plus">＋</span>`);
       $("#wsStory").textContent = story ? "→ " + story : "";
     }
+    renderFamily(openKey);
+    renderPhrases(openKey);
+    sheet.scrollTop = 0;
     const dictWord = encodeURIComponent(openKey || shown.toLowerCase());
     $("#wsMore").href = "https://dictionary.cambridge.org/dictionary/english-chinese-traditional/" + dictWord;
     $("#wsSave").hidden = !entry;
@@ -87,10 +108,37 @@
     App.speech.speak(shown, 0.85);
     $("#wsPlay").focus({ preventScroll: true });
   }
-  function close() { const s = $("#wordSheet"); if (s) { s.hidden = true; $("#wsBack").hidden = true; } }
+  function close() { const s = $("#wordSheet"); if (s) { s.hidden = true; $("#wsBack").hidden = true; } history.length = 0; openShown = ""; openFrom = ""; }
+
+  // 字根家族：列出同字根的單字；點任一個會打開它自己的單字卡（可以一路往下學）
+  function renderFamily(w) {
+    const ids = (LINKS[w] || []).filter((id) => ROOTS[id]);
+    $("#wsFamily").hidden = !ids.length;
+    if (!ids.length) return;
+    $("#wsFamilyBody").innerHTML = ids.map((id) => {
+      const r = ROOTS[id];
+      return `<div class="fam">
+        <div class="fam-head"><b>${esc(r.form)}</b><span>＝ ${esc(r.zh)}</span>${r.origin ? `<small>${esc(r.origin)}</small>` : ""}</div>
+        <div class="fam-list">${r.words.map(([fw, , , fzh, fparts]) => `
+          <button class="fam-word${fw === w ? " self" : ""}" data-w="${esc(fw)}">
+            <b>${esc(fw)}</b><em>${esc(fzh.split("；")[0])}</em>
+            <span>${esc((fparts || "").split("→")[0].trim())}</span>
+          </button>`).join("")}</div>
+        ${r.note ? `<p class="fam-note">${esc(r.note)}</p>` : ""}
+      </div>`;
+    }).join("");
+  }
+  function renderPhrases(w) {
+    const list = PHRASES[w] || [];
+    $("#wsPhrases").hidden = !list.length;
+    $("#wsPhraseList").innerHTML = list.map(([en, zh]) =>
+      `<li><button class="m-play" data-phrase="${esc(en)}" aria-label="播放片語">${App.ui.ICON.play}</button><div><b>${esc(en)}</b><span>${esc(zh)}</span></div></li>`).join("");
+  }
 
   document.addEventListener("DOMContentLoaded", () => {
     $("#wsBack").onclick = close; $("#wsClose").onclick = close;
+    $("#wsPrev").onclick = () => { const h = history.pop(); if (h) open(h.raw, { from: h.from, back: true }); };
+    $("#wsPhraseList").onclick = (e) => { const b = e.target.closest("[data-phrase]"); if (b) App.speech.speak(b.dataset.phrase, 0.8); };
     $("#wsSave").onclick = () => {
       App.words.has(openKey) ? App.words.remove(openKey) : App.words.add(openKey, openFrom);
       renderSaveBtn();
@@ -101,6 +149,18 @@
 
   App.dict = {
     add(entries) { Object.assign(DICT, entries); },
+    // 註冊字根家族；家族裡的單字若字典沒有，會自動補上條目
+    addRoots(roots) {
+      Object.entries(roots).forEach(([id, r]) => {
+        ROOTS[id] = r;
+        r.words.forEach(([w, ipa, pos, zh, parts]) => {
+          if (!DICT[w]) DICT[w] = [ipa, pos, zh, parts || ""].join("|");
+          linkWord(w, id);
+        });
+      });
+    },
+    link(map) { Object.entries(map).forEach(([w, ids]) => ids.forEach((id) => linkWord(w, id))); },
+    addPhrases(map) { Object.entries(map).forEach(([w, list]) => { PHRASES[w] = (PHRASES[w] || []).concat(list); }); },
     lookup, toKK, open, close,
     get: (w) => DICT[w],
     size: () => Object.keys(DICT).length,
