@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>English Pass 英語通行證</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@500;700&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@500;700&family=JetBrains+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<div class="wrap">
+
+  <!-- 共用標頭：各模組用 App.setHeader() 改標題；#hdrAction 給模組放一個動作按鈕 -->
+  <header class="ticket">
+    <div>
+      <div class="label">English Pass · 英語通行證</div>
+      <h1 id="hdrTitle">English Pass</h1>
+      <div class="route" id="hdrSub"></div>
+    </div>
+    <div class="stub">
+      <div class="label">Level</div>
+      <b id="hdrLevel">—</b>
+    </div>
+    <button class="menu-btn" id="hdrAction" hidden></button>
+  </header>
+
+  <!-- 模組畫面掛載點 -->
+  <main id="view"></main>
+
+  <!-- 共用單字卡 -->
+  <div class="ws-back" id="wsBack" hidden></div>
+  <div class="word-sheet" id="wordSheet" role="dialog" aria-label="單字解說" hidden>
+    <div class="ws-head">
+      <div>
+        <div class="ws-word" id="wsWord"></div>
+        <div class="ws-base" id="wsBase" hidden></div>
+        <div class="ws-pos" id="wsPos"></div>
+        <div class="phon">
+          <span class="ph-tag">KK</span><span class="ph" id="wsKK"></span>
+          <span class="ph-tag">IPA</span><span class="ph" id="wsIpa"></span>
+        </div>
+      </div>
+      <button class="btn btn-ghost" id="wsClose" style="padding:6px 12px" aria-label="關閉">✕</button>
+    </div>
+    <div class="row">
+      <button class="btn btn-dark" id="wsPlay">▶ 發音</button>
+      <button class="btn btn-ghost" id="wsSlow">慢速</button>
+    </div>
+    <div>
+      <div class="label">意思</div>
+      <div class="ws-zh" id="wsZh"></div>
+    </div>
+    <div id="wsParts" hidden>
+      <div class="label">字的組成</div>
+      <div class="formula" id="wsFormula"></div>
+      <div class="ws-story" id="wsStory"></div>
+    </div>
+    <div class="ws-foot">
+      <button class="btn btn-ghost" id="wsSave" aria-pressed="false">＋ 加入生字本</button>
+      <a class="linkbtn" id="wsMore" href="#" target="_blank" rel="noopener">劍橋英漢字典 ↗</a>
+    </div>
+  </div>
+</div>
+
+<!-- 底部分頁：由已註冊的模組自動產生 -->
+<nav class="tabs" id="tabs" aria-label="功能"></nav>
+
+<!-- 1. 核心 -->
+<script src="js/core/app.js"></script>
+<script src="js/core/speech.js"></script>
+<script src="js/core/dict.js"></script>
+
+<!-- 2. 內容包（新增一期新聞：複製一個 data/news/*.js 並在這裡加一行） -->
+<script src="data/speaking/travel.js"></script>
+<script src="data/news/2026-09-25.js"></script>
+
+<!-- 3. 功能模組（新增功能：在 js/modules/ 加檔案並在這裡加一行） -->
+<script src="js/modules/speaking.js"></script>
+<script src="js/modules/reading.js"></script>
+<script src="js/modules/wordbook.js"></script>
+<script src="js/modules/soon.js"></script>
+
+<script>App.start();</script>
+</body>
+</html>
