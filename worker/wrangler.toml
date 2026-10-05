@@ -1,0 +1,24 @@
+name = "good-english-api"
+main = "src/index.js"
+compatibility_date = "2026-10-01"
+
+[vars]
+# anthropic 或 gemini
+AI_PROVIDER = "anthropic"
+# 留空用各家預設模型；想省錢可改 claude-haiku-4-5-20251001
+AI_MODEL = ""
+# 正式網站網址，多個用逗號分隔；留空＝不限制（只適合本機開發）
+ALLOWED_ORIGINS = ""
+DEVICE_DAILY_LIMIT = "60"
+IP_DAILY_LIMIT = "200"
+GLOBAL_DAILY_LIMIT = "3000"
+
+# 金鑰不要寫在這裡，用指令設定：
+#   npx wrangler secret put ANTHROPIC_API_KEY
+#   npx wrangler secret put GEMINI_API_KEY
+
+# 用量上限需要 KV。建立後把 id 填進來並取消註解：
+#   npx wrangler kv namespace create QUOTA
+# [[kv_namespaces]]
+# binding = "QUOTA"
+# id = "填入建立後的 id"
